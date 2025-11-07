@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding RSVP Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fef9f9 0%, #fff5f5 100%);
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(163, 90, 90, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #A35A5A 0%, #8d4a4a 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: #fef9f9;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #A35A5A;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            padding: 1.5rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #A35A5A;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #8d4a4a;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-group select {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .table-container {
+            padding: 2rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: #f9f9f9;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #A35A5A;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover {
+            background: #fef9f9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .functions-list {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .function-tag {
+            background: #fff5f5;
+            color: #A35A5A;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #A35A5A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #A35A5A;
+        }
+
+        .export-info {
+            margin-left: auto;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💍 Margee & Jay Wedding RSVP Dashboard</h1>
+            <p>View and manage all wedding RSVPs</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalRsvps">0</div>
+                <div class="stat-label">Total RSVPs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="acceptingCount">0</div>
+                <div class="stat-label">Accepting</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="decliningCount">0</div>
+                <div class="stat-label">Declining</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalGuests">0</div>
+                <div class="stat-label">Total Guests</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by guest name...">
+            </div>
+            <div class="filter-group">
+                <label>Filter:</label>
+                <select id="filterSelect">
+                    <option value="all">All RSVPs</option>
+                    <option value="accepting">Accepting Only</option>
+                    <option value="declining">Declining Only</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadRsvps()">🔄 Refresh</button>
+            <button class="btn btn-secondary" onclick="exportToCSV()">📥 Export CSV</button>
+        </div>
+
+        <div class="table-container">
+            <div id="loadingState" class="loading">Loading RSVPs...</div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <h3>No RSVPs Yet</h3>
+                <p>RSVPs will appear here once guests start responding</p>
+            </div>
+            <table id="rsvpTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Guest Name</th>
+                        <th>Status</th>
+                        <th>Guest Count</th>
+                        <th>Functions Attending</th>
+                        <th>Dietary Restrictions</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody id="rsvpTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAo6eTa9Y4TccOpR45RIaymSIWv1dxRjDw",
+            authDomain: "margee-3d657.firebaseapp.com",
+            projectId: "margee-3d657",
+            storageBucket: "margee-3d657.firebasestorage.app",
+            messagingSenderId: "911426471822",
+            appId: "1:911426471822:web:8c1a545f6850a5d12086df",
+            measurementId: "G-4XXJEDQG8Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const __app_id = 'margee_jay_wedding_2025';
+
+        let allRsvps = [];
+
+        async function loadRsvps() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('rsvpTable');
+            
+            loadingState.style.display = 'block';
+            emptyState.style.display = 'none';
+            table.style.display = 'none';
+
+            try {
+                allRsvps = [];
+                
+                // Query all users
+                const usersRef = collection(db, `artifacts/${__app_id}/users`);
+                const usersSnapshot = await getDocs(usersRef);
+                
+                // For each user, get their RSVP
+                for (const userDoc of usersSnapshot.docs) {
+                    const rsvpsRef = collection(db, `artifacts/${__app_id}/users/${userDoc.id}/rsvps`);
+                    const rsvpsSnapshot = await getDocs(rsvpsRef);
+                    
+                    rsvpsSnapshot.forEach(rsvpDoc => {
+                        allRsvps.push({
+                            id: rsvpDoc.id,
+                            userId: userDoc.id,
+                            ...rsvpDoc.data()
+                        });
+                    });
+                }
+
+                loadingState.style.display = 'none';
+                
+                if (allRsvps.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    table.style.display = 'table';
+                    updateStats();
+                    displayRsvps(allRsvps);
+                }
+            } catch (error) {
+                console.error('Error loading RSVPs:', error);
+                loadingState.innerHTML = '<p style="color: #721c24;">Error loading RSVPs. Please check console.</p>';
+            }
+        }
+
+        function updateStats() {
+            const accepting = allRsvps.filter(r => r.attendance === 'accepting');
+            const declining = allRsvps.filter(r => r.attendance === 'declining');
+            const totalGuests = accepting.reduce((sum, r) => sum + parseInt(r.guestCount || 0), 0);
+
+            document.getElementById('totalRsvps').textContent = allRsvps.length;
+            document.getElementById('acceptingCount').textContent = accepting.length;
+            document.getElementById('decliningCount').textContent = declining.length;
+            document.getElementById('totalGuests').textContent = totalGuests;
+        }
+
+        function displayRsvps(rsvps) {
+            const tbody = document.getElementById('rsvpTableBody');
+            tbody.innerHTML = '';
+
+            rsvps.forEach(rsvp => {
+                const row = document.createElement('tr');
+                
+                const statusBadge = rsvp.attendance === 'accepting' 
+                    ? '<span class="badge badge-success">✓ Accepting</span>'
+                    : '<span class="badge badge-danger">✗ Declining</span>';
+
+                const functions = rsvp.functions && rsvp.functions.length > 0
+                    ? rsvp.functions.map(f => {
+                        const icons = { mehndi: '💅', grahshanti: '🙏', wedding: '💍' };
+                        return `<span class="function-tag">${icons[f] || ''} ${f}</span>`;
+                    }).join('')
+                    : '-';
+
+                const submittedDate = rsvp.submittedAt 
+                    ? new Date(rsvp.submittedAt).toLocaleString('en-IN', { 
+                        dateStyle: 'medium', 
+                        timeStyle: 'short' 
+                    })
+                    : '-';
+
+                row.innerHTML = `
+                    <td><strong>${rsvp.guestName || 'N/A'}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${rsvp.guestCount || '-'}</td>
+                    <td><div class="functions-list">${functions}</div></td>
+                    <td>${rsvp.dietary || '-'}</td>
+                    <td>${submittedDate}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterRsvps() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterValue = document.getElementById('filterSelect').value;
+
+            let filtered = allRsvps;
+
+            // Apply status filter
+            if (filterValue !== 'all') {
+                filtered = filtered.filter(r => r.attendance === filterValue);
+            }
+
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(r => 
+                    r.guestName && r.guestName.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            displayRsvps(filtered);
+        }
+
+        function exportToCSV() {
+            if (allRsvps.length === 0) {
+                alert('No RSVPs to export');
+                return;
+            }
+
+            const headers = ['Guest Name', 'Status', 'Guest Count', 'Functions', 'Dietary Restrictions', 'Submitted At'];
+            const rows = allRsvps.map(rsvp => [
+                rsvp.guestName || '',
+                rsvp.attendance || '',
+                rsvp.guestCount || '',
+                rsvp.functions ? rsvp.functions.join(', ') : '',
+                rsvp.dietary || '',
+                rsvp.submittedAt ? new Date(rsvp.submittedAt).toLocaleString() : ''
+            ]);
+
+            let csvContent = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wedding-rsvps-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterRsvps);
+        document.getElementById('filterSelect').addEventListener('change', filterRsvps);
+
+        // Make functions available globally
+        window.loadRsvps = loadRsvps;
+        window.exportToCSV = exportToCSV;
+
+        // Load RSVPs on page load
+        loadRsvps();
+    </script>
+</body>
+</html>
