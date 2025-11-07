@@ -325,7 +325,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, query, collectionGroup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collectionGroup, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -340,7 +340,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const __app_id = 'margee_jay_wedding_2025';
 
         let allRsvps = [];
 
@@ -356,30 +355,23 @@
             try {
                 allRsvps = [];
                 
-                console.log('Starting to load RSVPs...');
-                console.log('App ID:', __app_id);
+                console.log('Loading RSVPs using collectionGroup...');
                 
-                // Use collectionGroup to query all 'rsvps' subcollections
+                // Use collectionGroup to query all 'rsvps' subcollections across all users
                 const rsvpsQuery = collectionGroup(db, 'rsvps');
-                console.log('Querying all rsvps subcollections...');
                 
                 const rsvpsSnapshot = await getDocs(rsvpsQuery);
                 console.log('Found RSVPs:', rsvpsSnapshot.size);
                 
                 rsvpsSnapshot.forEach(rsvpDoc => {
-                    // Only include RSVPs from our wedding app
-                    if (rsvpDoc.ref.path.includes(__app_id)) {
-                        console.log('RSVP data:', rsvpDoc.data());
-                        allRsvps.push({
-                            id: rsvpDoc.id,
-                            userId: rsvpDoc.ref.parent.parent.id,
-                            ...rsvpDoc.data()
-                        });
-                    }
+                    console.log('RSVP:', rsvpDoc.id, rsvpDoc.data());
+                    allRsvps.push({
+                        id: rsvpDoc.id,
+                        ...rsvpDoc.data()
+                    });
                 });
 
                 console.log('Total RSVPs loaded:', allRsvps.length);
-                console.log('All RSVPs:', allRsvps);
 
                 loadingState.style.display = 'none';
                 
@@ -392,7 +384,7 @@
                 }
             } catch (error) {
                 console.error('Error loading RSVPs:', error);
-                loadingState.innerHTML = '<p style="color: #721c24;">Error loading RSVPs. Please check console.</p>';
+                loadingState.innerHTML = '<p style="color: #721c24;">Error loading RSVPs: ' + error.message + '</p>';
             }
         }
 

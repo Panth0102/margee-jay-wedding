@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Viewer - Margee & Jay</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: #A35A5A;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .debug {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+        }
+        .rsvp-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #A35A5A;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #8d4a4a;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💍 Wedding RSVP Viewer</h1>
+        <p>Margee & Jay - February 2026</p>
+    </div>
+
+    <div class="debug">
+        <h3>Debug Info:</h3>
+        <div id="debugInfo">Loading...</div>
+        <button onclick="testFirestore()">Test Firestore Connection</button>
+    </div>
+
+    <div id="rsvpContainer"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAo6eTa9Y4TccOpR45RIaymSIWv1dxRjDw",
+            authDomain: "margee-3d657.firebaseapp.com",
+            projectId: "margee-3d657",
+            storageBucket: "margee-3d657.firebasestorage.app",
+            messagingSenderId: "911426471822",
+            appId: "1:911426471822:web:8c1a545f6850a5d12086df",
+            measurementId: "G-4XXJEDQG8Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const debugDiv = document.getElementById('debugInfo');
+        const rsvpContainer = document.getElementById('rsvpContainer');
+
+        async function testFirestore() {
+            debugDiv.innerHTML = 'Testing Firestore connection...<br>';
+            
+            try {
+                // Test direct document read
+                debugDiv.innerHTML += 'Test 1: Reading specific RSVP document...<br>';
+                const rsvpDocRef = doc(db, 'artifacts/margee_jay_wedding_2025/users/e5b6ZDsmTzQkRk4ZSKt2BzYNs9i2/rsvps/guest_rsvp');
+                const rsvpDoc = await getDoc(rsvpDocRef);
+                debugDiv.innerHTML += `✓ RSVP document exists: ${rsvpDoc.exists()}<br>`;
+                
+                if (rsvpDoc.exists()) {
+                    debugDiv.innerHTML += `<pre>${JSON.stringify(rsvpDoc.data(), null, 2)}</pre>`;
+                }
+                
+                // Test 2: Can we access artifacts collection?
+                debugDiv.innerHTML += '<br>Test 2: Accessing artifacts collection...<br>';
+                const artifactsRef = collection(db, 'artifacts');
+                const artifactsSnap = await getDocs(artifactsRef);
+                debugDiv.innerHTML += `✓ Found ${artifactsSnap.size} documents in artifacts<br>`;
+                
+                // Test 3: Can we access the wedding document?
+                debugDiv.innerHTML += 'Test 3: Accessing wedding document...<br>';
+                const weddingDocRef = doc(db, 'artifacts', 'margee_jay_wedding_2025');
+                const weddingDoc = await getDoc(weddingDocRef);
+                debugDiv.innerHTML += `✓ Wedding document exists: ${weddingDoc.exists()}<br>`;
+                
+                // Test 4: Can we access users collection?
+                debugDiv.innerHTML += 'Test 4: Accessing users collection...<br>';
+                const usersRef = collection(db, 'artifacts/margee_jay_wedding_2025/users');
+                const usersSnap = await getDocs(usersRef);
+                debugDiv.innerHTML += `✓ Found ${usersSnap.size} users<br>`;
+                
+                if (usersSnap.size > 0) {
+                    debugDiv.innerHTML += 'User IDs:<br>';
+                    usersSnap.forEach(userDoc => {
+                        debugDiv.innerHTML += `  - ${userDoc.id}<br>`;
+                    });
+                    
+                    // Test 4: Can we access RSVPs for first user?
+                    const firstUserId = usersSnap.docs[0].id;
+                    debugDiv.innerHTML += `<br>Test 4: Accessing RSVPs for user ${firstUserId}...<br>`;
+                    const rsvpsRef = collection(db, `artifacts/margee_jay_wedding_2025/users/${firstUserId}/rsvps`);
+                    const rsvpsSnap = await getDocs(rsvpsRef);
+                    debugDiv.innerHTML += `✓ Found ${rsvpsSnap.size} RSVPs for this user<br>`;
+                    
+                    if (rsvpsSnap.size > 0) {
+                        rsvpsSnap.forEach(rsvpDoc => {
+                            debugDiv.innerHTML += `<br>RSVP Data:<br><pre>${JSON.stringify(rsvpDoc.data(), null, 2)}</pre>`;
+                        });
+                    }
+                    
+                    // Load all RSVPs
+                    await loadAllRsvps();
+                }
+                
+            } catch (error) {
+                debugDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+                console.error('Full error:', error);
+            }
+        }
+
+        async function loadAllRsvps() {
+            rsvpContainer.innerHTML = '<h2>All RSVPs:</h2>';
+            
+            try {
+                // Since collection queries don't work on empty parent docs,
+                // we'll use collectionGroup to get all rsvps subcollections
+                debugDiv.innerHTML += '<br>Loading all RSVPs using collectionGroup...<br>';
+                
+                const { collectionGroup, query: firestoreQuery } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                const rsvpsQuery = collectionGroup(db, 'rsvps');
+                const rsvpsSnap = await getDocs(rsvpsQuery);
+                
+                debugDiv.innerHTML += `✓ Found ${rsvpsSnap.size} total RSVPs<br>`;
+                
+                if (rsvpsSnap.size === 0) {
+                    rsvpContainer.innerHTML += '<p>No RSVPs found yet.</p>';
+                    return;
+                }
+                
+                rsvpsSnap.forEach(rsvpDoc => {
+                    const data = rsvpDoc.data();
+                    const card = document.createElement('div');
+                    card.className = 'rsvp-card';
+                    card.innerHTML = `
+                        <h3>${data.guestName || 'Unknown'}</h3>
+                        <p><strong>Status:</strong> ${data.attendance === 'accepting' ? '✅ Accepting' : '❌ Declining'}</p>
+                        ${data.guestCount ? `<p><strong>Guests:</strong> ${data.guestCount}</p>` : ''}
+                        ${data.functions ? `<p><strong>Functions:</strong> ${data.functions.join(', ')}</p>` : ''}
+                        ${data.dietary ? `<p><strong>Dietary:</strong> ${data.dietary}</p>` : ''}
+                        <p><strong>Submitted:</strong> ${new Date(data.submittedAt).toLocaleString()}</p>
+                    `;
+                    rsvpContainer.appendChild(card);
+                });
+            } catch (error) {
+                rsvpContainer.innerHTML += `<div class="error">Error loading RSVPs: ${error.message}</div>`;
+                console.error('Full error:', error);
+            }
+        }
+
+        // Make function available globally
+        window.testFirestore = testFirestore;
+
+        // Auto-run on load
+        testFirestore();
+    </script>
+</body>
+</html>
