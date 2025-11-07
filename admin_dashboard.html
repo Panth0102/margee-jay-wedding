@@ -356,16 +356,25 @@
             try {
                 allRsvps = [];
                 
+                console.log('Starting to load RSVPs...');
+                console.log('App ID:', __app_id);
+                
                 // Query all users
                 const usersRef = collection(db, `artifacts/${__app_id}/users`);
+                console.log('Users path:', `artifacts/${__app_id}/users`);
+                
                 const usersSnapshot = await getDocs(usersRef);
+                console.log('Found users:', usersSnapshot.size);
                 
                 // For each user, get their RSVP
                 for (const userDoc of usersSnapshot.docs) {
+                    console.log('Processing user:', userDoc.id);
                     const rsvpsRef = collection(db, `artifacts/${__app_id}/users/${userDoc.id}/rsvps`);
                     const rsvpsSnapshot = await getDocs(rsvpsRef);
+                    console.log('Found RSVPs for user:', rsvpsSnapshot.size);
                     
                     rsvpsSnapshot.forEach(rsvpDoc => {
+                        console.log('RSVP data:', rsvpDoc.data());
                         allRsvps.push({
                             id: rsvpDoc.id,
                             userId: userDoc.id,
@@ -373,6 +382,9 @@
                         });
                     });
                 }
+
+                console.log('Total RSVPs loaded:', allRsvps.length);
+                console.log('All RSVPs:', allRsvps);
 
                 loadingState.style.display = 'none';
                 
